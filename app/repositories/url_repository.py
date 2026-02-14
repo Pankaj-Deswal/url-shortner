@@ -25,3 +25,11 @@ class UrlRepository:
         )
         row = result.scalar_one_or_none()
         return str(row) if row is not None else None
+
+    async def get_short_code_by_long_url(self, long_url: str) -> str | None:
+        """Return short_code for the given long_url, or None if not found."""
+        result = await self._db.execute(
+            select(Url.short_code).where(Url.long_url == long_url).limit(1)
+        )
+        row = result.scalar_one_or_none()
+        return str(row) if row is not None else None

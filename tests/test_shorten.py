@@ -11,7 +11,10 @@ async def test_shorten_returns_short_url(client: AsyncClient) -> None:
     assert response.status_code == 200
     data = response.json()
     assert "short_url" in data
-    assert data["short_url"].endswith("/1")  # Base62(1) = "1"
+    # Random Base62 code: default length 6, after last /
+    short_code = data["short_url"].split("/")[-1]
+    assert len(short_code) == 6
+    assert short_code.isalnum()
 
 
 @pytest.mark.asyncio

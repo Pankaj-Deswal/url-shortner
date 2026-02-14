@@ -1,7 +1,14 @@
-"""Base62 encoding (0-9, a-z, A-Z) for short codes."""
+"""Base62 encoding (0-9, a-z, A-Z) and random short code generation."""
+
+import secrets
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 BASE = len(ALPHABET)
+
+
+def generate_random_base62(length: int) -> str:
+    """Generate a random Base62 string of given length (cryptographically strong)."""
+    return "".join(secrets.choice(ALPHABET) for _ in range(length))
 
 
 def encode(num: int) -> str:

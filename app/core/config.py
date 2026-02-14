@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     base_url: str = "http://localhost:8000"
     redis_cache_ttl_seconds: int | None = None  # None = no TTL
+    short_code_length: int = 6  # length of randomly generated short codes
 
 
 settings = Settings()

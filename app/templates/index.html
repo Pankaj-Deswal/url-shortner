@@ -74,6 +74,12 @@
     .result a:hover { text-decoration: underline; }
     .error { color: #f87171; }
     .hidden { display: none; }
+    .copy-notice {
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      color: #a1a1aa;
+    }
+    .result-message { color: #a1a1aa; font-size: 0.875rem; }
   </style>
 </head>
 <body>
@@ -84,27 +90,27 @@
     <input type="url" id="longUrl" placeholder="Paste your long URL here" />
     <button type="button" id="shortenBtn">Get short URL</button>
     <div id="shortResult" class="result hidden"></div>
-  </div>
-
-  <div class="card">
-    <h2>Go to URL</h2>
-    <input type="text" id="shortInput" placeholder="Paste short URL or short code" />
-    <button type="button" id="goBtn">Go to URL</button>
+    <p id="copyNotice" class="copy-notice hidden">Please copy the URL and store it somewhere.</p>
   </div>
 
   <script>
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
     const baseUrl = '{{ base_url }}'.replace(/\/$/, '');
     const longUrlInput = document.getElementById('longUrl');
     const shortenBtn = document.getElementById('shortenBtn');
     const shortResult = document.getElementById('shortResult');
-    const shortInput = document.getElementById('shortInput');
-    const goBtn = document.getElementById('goBtn');
+    const copyNotice = document.getElementById('copyNotice');
 
     shortenBtn.addEventListener('click', async () => {
       const url = longUrlInput.value.trim();
       if (!url) return;
       shortResult.classList.add('hidden');
       shortResult.classList.remove('error');
+      copyNotice.classList.add('hidden');
       shortenBtn.disabled = true;
       try {
         const res = await fetch(baseUrl + '/shorten', {
@@ -117,7 +123,12 @@
           shortResult.textContent = data.detail || 'Failed to shorten URL';
           shortResult.classList.add('error');
         } else {
-          shortResult.innerHTML = 'Short URL: <a href="' + data.short_url + '" target="_blank" rel="noopener">' + data.short_url + '</a>';
+          let html = 'Short URL: <a href="' + data.short_url + '" target="_blank" rel="noopener">' + data.short_url + '</a>';
+          if (data.message) {
+            html = '<span class="result-message">' + escapeHtml(data.message) + '</span><br>' + html;
+          }
+          shortResult.innerHTML = html;
+          copyNotice.classList.remove('hidden');
         }
         shortResult.classList.remove('hidden');
       } catch (e) {
@@ -126,18 +137,6 @@
         shortResult.classList.remove('hidden');
       }
       shortenBtn.disabled = false;
-    });
-
-    goBtn.addEventListener('click', () => {
-      let raw = shortInput.value.trim();
-      if (!raw) return;
-      let code = raw;
-      try {
-        const u = new URL(raw);
-        code = u.pathname.replace(/^\//, '') || raw;
-      } catch (_) {}
-      if (!code) return;
-      window.location.href = baseUrl + '/' + encodeURIComponent(code);
     });
   </script>
 </body>

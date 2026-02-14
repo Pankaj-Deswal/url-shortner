@@ -11,3 +11,4 @@ class ShortenResponse(BaseModel):
     """Response for POST /shorten."""
 
     short_url: str
+    message: str | None = None  # e.g. "URL already exists" when returning existing short URL

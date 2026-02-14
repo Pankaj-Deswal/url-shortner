@@ -16,8 +16,9 @@ async def shorten(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),
 ) -> ShortenResponse:
-    """Create a short URL for the given long URL."""
+    """Create a short URL for the given long URL, or return existing if already shortened."""
     long_url = str(body.url)
     service = UrlService(db, redis)
-    short_url = await service.shorten_url(long_url)
-    return ShortenResponse(short_url=short_url)
+    short_url, already_exists = await service.shorten_url(long_url)
+    message = "URL already exists." if already_exists else None
+    return ShortenResponse(short_url=short_url, message=message)
