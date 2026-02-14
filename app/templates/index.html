@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      background: #0f0f12;
+      color: #e4e4e7;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      color: #fafafa;
+    }
+    .card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      color: #a1a1aa;
+    }
+    input[type="url"], input[type="text"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #3f3f46;
+      border-radius: 8px;
+      background: #27272a;
+      color: #fafafa;
+      margin-bottom: 0.75rem;
+    }
+    input::placeholder { color: #71717a; }
+    input:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+    button {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #6366f1;
+      color: #fff;
+    }
+    button:hover { background: #4f46e5; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .result {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: #27272a;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      word-break: break-all;
+    }
+    .result a { color: #818cf8; text-decoration: none; }
+    .result a:hover { text-decoration: underline; }
+    .error { color: #f87171; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>URL Shortener</h1>
+
+  <div class="card">
+    <h2>Get short URL</h2>
+    <input type="url" id="longUrl" placeholder="Paste your long URL here" />
+    <button type="button" id="shortenBtn">Get short URL</button>
+    <div id="shortResult" class="result hidden"></div>
+  </div>
+
+  <div class="card">
+    <h2>Go to URL</h2>
+    <input type="text" id="shortInput" placeholder="Paste short URL or short code" />
+    <button type="button" id="goBtn">Go to URL</button>
+  </div>
+
+  <script>
+    const baseUrl = '{{ base_url }}'.replace(/\/$/, '');
+    const longUrlInput = document.getElementById('longUrl');
+    const shortenBtn = document.getElementById('shortenBtn');
+    const shortResult = document.getElementById('shortResult');
+    const shortInput = document.getElementById('shortInput');
+    const goBtn = document.getElementById('goBtn');
+
+    shortenBtn.addEventListener('click', async () => {
+      const url = longUrlInput.value.trim();
+      if (!url) return;
+      shortResult.classList.add('hidden');
+      shortResult.classList.remove('error');
+      shortenBtn.disabled = true;
+      try {
+        const res = await fetch(baseUrl + '/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          shortResult.textContent = data.detail || 'Failed to shorten URL';
+          shortResult.classList.add('error');
+        } else {
+          shortResult.innerHTML = 'Short URL: <a href="' + data.short_url + '" target="_blank" rel="noopener">' + data.short_url + '</a>';
+        }
+        shortResult.classList.remove('hidden');
+      } catch (e) {
+        shortResult.textContent = 'Network error. Try again.';
+        shortResult.classList.add('error');
+        shortResult.classList.remove('hidden');
+      }
+      shortenBtn.disabled = false;
+    });
+
+    goBtn.addEventListener('click', () => {
+      let raw = shortInput.value.trim();
+      if (!raw) return;
+      let code = raw;
+      try {
+        const u = new URL(raw);
+        code = u.pathname.replace(/^\//, '') || raw;
+      } catch (_) {}
+      if (!code) return;
+      window.location.href = baseUrl + '/' + encodeURIComponent(code);
+    });
+  </script>
+</body>
+</html>
